@@ -47,7 +47,7 @@ library(htmltools)
 
 # simple <- read_html("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor")
 
-ced <- st_read("L:\\MAPINFO\\DATA\\data_new\\BoundaryLine\\OS_2021_DATA\\Data\\GB\\county_electoral_division.tab") |> 
+ced <- st_read("L:\\MAPINFO\\DATA\\data_new\\BoundaryLine\\OS_2021_DATA\\Data\\GB\\county_electoral_division.tab", quiet = TRUE) |> 
   dplyr::filter(File_Name == "SUFFOLK_COUNTY")
 
 ced <- st_transform(ced, 4326)
@@ -95,7 +95,8 @@ councillor_map <- leaflet() |>
   addSearchFeatures(
     targetGroups = c("County Electoral Division"),
     options = searchFeaturesOptions(
-      hideMarkerOnCollapse = TRUE
+      hideMarkerOnCollapse = TRUE,
+      zoom = 12
     )) |> 
   addFullscreenControl()
 
