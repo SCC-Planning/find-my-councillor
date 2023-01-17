@@ -1,0 +1,27 @@
+---
+title: "Find Your Councillor"
+scctemplate:
+  index:
+    - href: "scc.html"
+      text: "Suffolk County Council"
+  header:
+    site_branding: "Suffolk County Council"
+  navigation:
+    breadcrumb_trail:
+      - text: "Home"
+  seo:
+    description: "SEO (search engine optimisation) description"
+    keywords: "SEO, keywords, comma, separated"
+toc: false
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Instructions:
+# All you need to edit here is:
+  # - The title of your website
+  # - The index, make sure you reference all of your pages
+  # - OPTIONAL: add an author: or authors: section.
+  # - OPTIONAL: add seo descriptions.
+```

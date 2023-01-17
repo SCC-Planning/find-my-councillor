@@ -1,0 +1,103 @@
+---
+title: "Suffolk County Council"
+author: "`r as.character(Sys.info()[7])`"
+date: "`r Sys.Date()`"
+scctemplate:
+  header:
+    site_branding: "Suffolk County Council"
+  navigation:
+    breadcrumb_trail:
+      - href: "index.html"
+        text: "Home"
+      - text: "Suffolk County Council"
+    toc:
+      sticky: false
+      numbered: false
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(sf)
+library(dplyr)
+library(leaflet)
+```
+
+# Find your councillor
+
+## Suffolk County Council
+
+Use the map below to found your councillor. Hover over to... etc
+
+
+```{r cars}
+library(httr)
+library(XML)
+library(dplyr)
+library(rvest)
+library(leaflet)
+library(here)
+library(sf)
+library(dplyr)
+library(tidyr)
+library(mapview)
+library(leafem)
+library(leaflet.extras)
+library(htmlwidgets)
+library(htmltools)
+
+# simple <- read_html("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor")
+
+ced <- st_read("L:\\MAPINFO\\DATA\\data_new\\BoundaryLine\\OS_2021_DATA\\Data\\GB\\county_electoral_division.tab") |> 
+  dplyr::filter(File_Name == "SUFFOLK_COUNTY")
+
+ced <- st_transform(ced, 4326)
+
+division_label <- sprintf(
+  "<strong>%s</strong>",
+  ced$Name
+) %>% lapply(htmltools::HTML)
+
+leaflet() |> 
+  addTiles(group = "Topo") |> 
+  addPolygons(
+    data = ced,
+    group = "County Electoral Division",
+    color = "black",
+    opacity = 1,
+    weight = 2,
+    fillColor = "#2d6ca2",
+    fillOpacity = 0.2,
+    highlightOptions = highlightOptions(
+      color = "white",
+      weight = 4,
+      fill = "#666",
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    label = division_label,
+    labelOptions = labelOptions(
+      style = list("font-weigth" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto"
+    )
+  ) |> 
+  addLayersControl(
+    data = ced,
+    overlayGroups = c(
+      "County Electoral Division"
+    ),
+    position = "bottomright"
+  ) |> 
+  addLegend(
+    colors = c("#2d6ca2"),
+    labels = c("County Electoral Division")
+  ) |>
+  addSearchFeatures(
+    targetGroups = c("County Electoral Division"),
+    options = searchFeaturesOptions(
+      hideMarkerOnCollapse = TRUE
+    )) |> 
+  addFullscreenControl()
+
+```
