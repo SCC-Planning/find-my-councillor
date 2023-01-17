@@ -74,6 +74,11 @@ ced$image <- paste0("https://www.suffolk.gov.uk/image-library/", ced$councillor_
 ced$html <- paste0("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor/", ced$councillor_lower)
 
 division_label <- sprintf(
+  "<strong>%s</strong><br/>Click for more information",
+  ced$Name
+) %>% lapply(htmltools::HTML)
+
+division_popup <- sprintf(
   "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/>%s<br/><img src=%s width = 460px/>",
   ced$Name, ced$html, ced$councillor_name, ced$party_name, ced$image
 ) %>% lapply(htmltools::HTML)
@@ -95,7 +100,13 @@ councillor_map <- leaflet() |>
       fillOpacity = 0.7,
       bringToFront = TRUE
     ),
-    popup = division_label,
+    label = division_label,
+    labelOptions = labelOptions(
+      style = list("font-weigth" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto"
+    ),
+    popup = division_popup,
     popupOptions = popupOptions(
       style = list("font-weigth" = "normal", padding = "3px 8px"),
       textsize = "15px",
