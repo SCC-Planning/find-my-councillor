@@ -22,13 +22,11 @@ library(dplyr)
 library(leaflet)
 ```
 
-# Find your councillor
+# Find Your Councillor
 
 Use the map below to find your Councillor. Hover over each electoral district to see the name of the district. 
 
 Click on the district to get more information about the Councillor. You can also search by location using the search icon on the left.
-
-Clicking on a Councillor's name will take you to their profile on the Suffolk County Council [Find Your Councillor website](https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor).
 
 ```{r map, echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%", fig.align='center'}
 library(httr)
@@ -121,8 +119,8 @@ ced <- ced |>
   filter(count == 1)
 
 division_popup <- sprintf(
-  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
-  ced$Name, ced$html, ced$councillor_name, ced$hex, ced$party_name, ced$image
+  "<strong>%s</strong><br/><strong>%s</strong><br/><strong><span style='color:%s;'>%s</span></strong><br/>Click <strong><a href = %s>here</a></strong> for full profile<br/><img src=%s width = 180px/>",
+  ced$Name, ced$councillor_name, ced$hex, ced$party_name, ced$html, ced$image
 ) %>% lapply(htmltools::HTML)
 
 seperated <- separate(
@@ -161,8 +159,8 @@ seperated <- separate(
 )
 
 division_popup2 <- sprintf(
-  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/><br/><br><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
-  seperated$Name, seperated$html1, seperated$councillor_name1, seperated$hex1, seperated$party_name1, seperated$image1, seperated$html2, seperated$councillor_name2, seperated$hex2, seperated$party_name2, seperated$image2
+  "<strong>%s</strong><br/><strong>%s</strong><br/><strong><span style='color:%s;'>%s</span></strong><br/>Click <strong><a href = %s>here</a></strong> for full profile<br/><img src=%s width = 180px/><br/><br><strong>%s</strong><br/><strong><span style='color:%s;'>%s</span></strong><br/>Click <strong><a href = %s>here</a></strong> for full profile<br/><img src=%s width = 180px/>",
+  seperated$Name, seperated$councillor_name1, seperated$hex1, seperated$party_name1, seperated$html1, seperated$image1,  seperated$councillor_name2, seperated$hex2, seperated$party_name2, seperated$html2, seperated$image2
 ) %>% lapply(htmltools::HTML)
 
 division_popup <- append(division_popup, division_popup2)
