@@ -27,10 +27,9 @@ library(leaflet)
 
 ## Suffolk County Council
 
-Use the map below to found your councillor. Hover over to... etc
+Use the map below to found your Councillor. Hover over to... etc
 
-
-```{r cars}
+```{r map, echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%", fig.align='center'}
 library(httr)
 library(XML)
 library(dplyr)
@@ -58,7 +57,7 @@ division_label <- sprintf(
   ced$Name
 ) %>% lapply(htmltools::HTML)
 
-leaflet() |> 
+councillor_map <- leaflet() |> 
   addTiles(group = "Topo") |> 
   addPolygons(
     data = ced,
@@ -99,5 +98,14 @@ leaflet() |>
       hideMarkerOnCollapse = TRUE
     )) |> 
   addFullscreenControl()
+
+htmlwidgets::saveWidget(councillor_map, "councillor_map.html")
+
+htmltools::tags$iframe(
+  src = "councillor_map.html",
+  width = "100%",
+  style="height: 75vh;",
+  scrolling = "no"
+)
 
 ```
