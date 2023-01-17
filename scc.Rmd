@@ -27,7 +27,9 @@ library(leaflet)
 
 ## Suffolk County Council
 
-Use the map below to found your Councillor. Hover over to... etc
+Use the map below to find your Councillor. Hover over each electoral district to see the name of the district. Click on the district to get more information about the Councillor. You can also search by location using the search icon on the left.
+
+Clicking on a Councillor's name will take you to their profile on the county's [Find Your Councillor website](https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor).
 
 ```{r map, echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%", fig.align='center'}
 library(httr)
@@ -46,7 +48,6 @@ library(htmlwidgets)
 library(htmltools)
 
 # simple <- read_html("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor")
-
 councillors <- readr::read_csv("opencouncildata_councillors.csv") |> 
   dplyr::filter(council == "Suffolk") |> 
   janitor::clean_names()
@@ -69,9 +70,16 @@ ced$councillor_name <- gsub(" MBE DL", "", ced$councillor_name)
 ced$councillor_lower <- tolower(ced$councillor_name)
 ced$councillor_lower <- gsub(" ", "-", ced$councillor_lower)
 
-ced$image <- paste0("https://www.suffolk.gov.uk/image-library/", ced$councillor_lower, "-square.jpg")
+ced$image <- paste0("https://www.suffolk.gov.uk/image-library/", ced$councillor_lower, "-ws-hr.jpg")
 
 ced$html <- paste0("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor/", ced$councillor_lower)
+
+colours <- data.frame(
+  party_name = c("Green Party", "Conservative and Unionist", "Labour Party", "Liberal Democrats", "Independent / Other", "West Suffolk Independents"),
+  hex = c("#6DC23B", "#00AEEF", "#E4003B", "#FAA01A", "#B1B4B6", "#A395A5")
+)
+
+ced <- left_join(ced, colours, by = c("party_name" = "party_name"))
 
 division_label <- sprintf(
   "<strong>%s</strong><br/>Click for more information",
@@ -79,8 +87,8 @@ division_label <- sprintf(
 ) %>% lapply(htmltools::HTML)
 
 division_popup <- sprintf(
-  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/>%s<br/><img src=%s width = 460px/>",
-  ced$Name, ced$html, ced$councillor_name, ced$party_name, ced$image
+  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
+  ced$Name, ced$html, ced$councillor_name, ced$hex, ced$party_name, ced$image
 ) %>% lapply(htmltools::HTML)
 
 councillor_map <- leaflet() |> 
@@ -125,7 +133,7 @@ councillor_map <- leaflet() |>
     labels = c("County Electoral Division")
   ) |>
   addSearchFeatures(
-    targetGroups = c("County Electoral Division"),
+    targetGroups = c("County Electoral Division", ced$councillor_name),
     options = searchFeaturesOptions(
       hideMarkerOnCollapse = TRUE,
       zoom = 12
