@@ -110,10 +110,6 @@ test <- lapply(unique(ced$Name), function(district) {
   return(counts)
 })
 
-lapply(ced$councillor_name, function(x) {
-  str_detect(x, "\\,")
-})
-
 ced <- bind_rows(test)
 ced$Name <- gsub("(.*),.*", "\\1", ced$Name)
 ced$count <- gsub("(.*),.*", "\\1", ced$count)
