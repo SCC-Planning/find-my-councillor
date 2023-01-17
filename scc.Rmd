@@ -165,7 +165,7 @@ seperated <- separate(
 )
 
 division_popup2 <- sprintf(
-  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
+  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/><br/><br><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
   seperated$Name, seperated$html1, seperated$councillor_name1, seperated$hex1, seperated$party_name1, seperated$image1, seperated$html2, seperated$councillor_name2, seperated$hex2, seperated$party_name2, seperated$image2
 ) %>% lapply(htmltools::HTML)
 
