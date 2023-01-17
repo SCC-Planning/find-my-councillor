@@ -47,14 +47,35 @@ library(htmltools)
 
 # simple <- read_html("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor")
 
+councillors <- readr::read_csv("opencouncildata_councillors.csv") |> 
+  dplyr::filter(council == "Suffolk") |> 
+  janitor::clean_names()
+
 ced <- st_read("L:\\MAPINFO\\DATA\\data_new\\BoundaryLine\\OS_2021_DATA\\Data\\GB\\county_electoral_division.tab", quiet = TRUE) |> 
   dplyr::filter(File_Name == "SUFFOLK_COUNTY")
 
 ced <- st_transform(ced, 4326)
 
+ced$Name <- gsub(" ED", "", ced$Name)
+ced$Name <- gsub("St\\.", "St", ced$Name)
+
+ced <- left_join(ced, councillors, by = c("Name" = "ward_name"))
+
+ced <- ced |> 
+  select(Name, councillor_name, party_name)
+
+ced$councillor_name <- gsub(" MBE DL", "", ced$councillor_name)
+
+ced$councillor_lower <- tolower(ced$councillor_name)
+ced$councillor_lower <- gsub(" ", "-", ced$councillor_lower)
+
+ced$image <- paste0("https://www.suffolk.gov.uk/image-library/", ced$councillor_lower, "-square.jpg")
+
+ced$html <- paste0("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor/", ced$councillor_lower)
+
 division_label <- sprintf(
-  "<strong>%s</strong>",
-  ced$Name
+  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/>%s<br/><img src=%s width = 460px/>",
+  ced$Name, ced$html, ced$councillor_name, ced$party_name, ced$image
 ) %>% lapply(htmltools::HTML)
 
 councillor_map <- leaflet() |> 
@@ -74,8 +95,8 @@ councillor_map <- leaflet() |>
       fillOpacity = 0.7,
       bringToFront = TRUE
     ),
-    label = division_label,
-    labelOptions = labelOptions(
+    popup = division_label,
+    popupOptions = popupOptions(
       style = list("font-weigth" = "normal", padding = "3px 8px"),
       textsize = "15px",
       direction = "auto"
