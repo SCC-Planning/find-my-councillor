@@ -24,8 +24,6 @@ library(leaflet)
 
 # Find your councillor
 
-## Suffolk County Council
-
 Use the map below to find your Councillor. Hover over each electoral district to see the name of the district. 
 
 Click on the district to get more information about the Councillor. You can also search by location using the search icon on the left.
@@ -76,21 +74,112 @@ ced$image <- paste0("https://www.suffolk.gov.uk/image-library/", ced$councillor_
 ced$html <- paste0("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor/", ced$councillor_lower)
 
 colours <- data.frame(
-  party_name = c("Green Party", "Conservative and Unionist", "Labour Party", "Liberal Democrats", "Independent / Other", "West Suffolk Independents"),
-  hex = c("#6DC23B", "#00AEEF", "#E4003B", "#FAA01A", "#B1B4B6", "#A395A5")
+  party_name = c(
+    "Green Party",
+    "Conservative and Unionist",
+    "Labour Party",
+    "Liberal Democrats",
+    "Independent / Other",
+    "West Suffolk Independents"
+  ),
+  hex = c(
+    "#6DC23B",
+    "#00AEEF",
+    "#E4003B",
+    "#FAA01A",
+    "#B1B4B6",
+    "#A395A5"
+  )
 )
 
 ced <- left_join(ced, colours, by = c("party_name" = "party_name"))
+
+test <- lapply(unique(ced$Name), function(district) {
+  counts <- ced |> 
+    dplyr::filter(Name == district) |> 
+    select(-councillor_lower)
+  
+    counts$count <- 1
+  
+  if(nrow(counts) > 1 ) {
+    counts <- counts %>%
+      summarise_all(str_c, collapse = ', ')
+    
+    counts$count <- 2
+  }
+  return(counts)
+})
+
+lapply(ced$councillor_name, function(x) {
+  str_detect(x, "\\,")
+})
+
+ced <- bind_rows(test)
+ced$Name <- gsub("(.*),.*", "\\1", ced$Name)
+ced$count <- gsub("(.*),.*", "\\1", ced$count)
+
+ced2 <- ced |> 
+  filter(count == 2)
+
+ced <- ced |> 
+  filter(count == 1)
+
+division_popup <- sprintf(
+  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
+  ced$Name, ced$html, ced$councillor_name, ced$hex, ced$party_name, ced$image
+) %>% lapply(htmltools::HTML)
+
+seperated <- separate(
+  ced2,
+  html,
+  into = c("html1", "html2"),
+  sep = ","
+)
+
+seperated <- separate(
+  seperated,
+  councillor_name,
+  into = c("councillor_name1", "councillor_name2"),
+  sep = ","
+)
+
+seperated <- separate(
+  seperated,
+  image,
+  into = c("image1", "image2"),
+  sep = ","
+)
+
+seperated <- separate(
+  seperated,
+  party_name,
+  into = c("party_name1", "party_name2"),
+  sep = ","
+)
+
+seperated <- separate(
+  seperated,
+  hex,
+  into = c("hex1", "hex2"),
+  sep = ","
+)
+
+division_popup2 <- sprintf(
+  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
+  seperated$Name, seperated$html1, seperated$councillor_name1, seperated$hex1, seperated$party_name1, seperated$image1, seperated$html2, seperated$councillor_name2, seperated$hex2, seperated$party_name2, seperated$image2
+) %>% lapply(htmltools::HTML)
+
+division_popup <- append(division_popup, division_popup2)
+
+ced <- bind_rows(ced, ced2)
 
 division_label <- sprintf(
   "<strong>%s</strong><br/>Click for more information",
   ced$Name
 ) %>% lapply(htmltools::HTML)
 
-division_popup <- sprintf(
-  "<strong>%s</strong><br/><strong><a href = %s>%s</a></strong><br/><strong><span style='color:%s;'>%s</span></strong><br/><img src=%s width = 240px/>",
-  ced$Name, ced$html, ced$councillor_name, ced$hex, ced$party_name, ced$image
-) %>% lapply(htmltools::HTML)
+ced$hex <- gsub("#6DC23B, #6DC23B", "#6DC23B", ced$hex)
+ced$hex <- gsub("#00AEEF, #00AEEF", "#00AEEF", ced$hex)
 
 councillor_map <- leaflet() |> 
   addTiles(group = "Topo") |> 
@@ -100,7 +189,7 @@ councillor_map <- leaflet() |>
     color = "black",
     opacity = 1,
     weight = 2,
-    fillColor = "#2d6ca2",
+    fillColor = ced$hex,
     fillOpacity = 0.2,
     highlightOptions = highlightOptions(
       color = "white",
@@ -112,13 +201,13 @@ councillor_map <- leaflet() |>
     label = division_label,
     labelOptions = labelOptions(
       style = list("font-weigth" = "normal", padding = "3px 8px"),
-      textsize = "15px",
+      textsize = "20px",
       direction = "auto"
     ),
     popup = division_popup,
     popupOptions = popupOptions(
       style = list("font-weigth" = "normal", padding = "3px 8px"),
-      textsize = "15px",
+      textsize = "20px",
       direction = "auto"
     )
   ) |> 
@@ -129,10 +218,6 @@ councillor_map <- leaflet() |>
     ),
     position = "bottomright"
   ) |> 
-  addLegend(
-    colors = c("#2d6ca2"),
-    labels = c("County Electoral Division")
-  ) |>
   addSearchFeatures(
     targetGroups = c("County Electoral Division", ced$councillor_name),
     options = searchFeaturesOptions(
