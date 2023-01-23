@@ -17,9 +17,24 @@ scctemplate:
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+library(httr)
+library(XML)
+library(dplyr)
+library(rvest)
+library(leaflet)
+library(stringr)
+library(here)
 library(sf)
 library(dplyr)
-library(leaflet)
+library(tidyr)
+library(purrr)
+library(mapview)
+library(leafem)
+library(leaflet.extras)
+library(htmlwidgets)
+library(htmltools)
+
+source("get_councillor_info.R")
 ```
 
 # Find Your Councillor
@@ -29,25 +44,7 @@ Use the map below to find your Councillor. Hover over each electoral district to
 Click on the district to get more information about the Councillor. You can also search by location using the search icon on the left.
 
 ```{r map, echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%", fig.align='center'}
-library(httr)
-library(XML)
-library(dplyr)
-library(rvest)
-library(leaflet)
-library(here)
-library(sf)
-library(dplyr)
-library(tidyr)
-library(mapview)
-library(leafem)
-library(leaflet.extras)
-library(htmlwidgets)
-library(htmltools)
-
-# simple <- read_html("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor")
-councillors <- readr::read_csv("opencouncildata_councillors.csv") |> 
-  dplyr::filter(council == "Suffolk") |> 
-  janitor::clean_names()
+councillors <- get_councillor_info()
 
 ced <- st_read("L:\\MAPINFO\\DATA\\data_new\\BoundaryLine\\OS_2021_DATA\\Data\\GB\\county_electoral_division.tab", quiet = TRUE) |> 
   dplyr::filter(File_Name == "SUFFOLK_COUNTY")
@@ -57,32 +54,25 @@ ced <- st_transform(ced, 4326)
 ced$Name <- gsub(" ED", "", ced$Name)
 ced$Name <- gsub("St\\.", "St", ced$Name)
 
-ced <- left_join(ced, councillors, by = c("Name" = "ward_name"))
+ced <- left_join(ced, councillors, by = c("Name" = "division"))
 
 ced <- ced |> 
-  select(Name, councillor_name, party_name)
-
-ced$councillor_name <- gsub(" MBE DL", "", ced$councillor_name)
-
-ced$councillor_lower <- tolower(ced$councillor_name)
-ced$councillor_lower <- gsub(" ", "-", ced$councillor_lower)
-
-ced$image <- paste0("https://www.suffolk.gov.uk/image-library/", ced$councillor_lower, "-ws-hr.jpg")
-
-ced$html <- paste0("https://www.suffolk.gov.uk/council-and-democracy/councillors-and-elected-representatives/find-your-councillor/", ced$councillor_lower)
+  select(Name, councillor_name = name, party_name = party, html, image)
 
 colours <- data.frame(
   party_name = c(
-    "Green Party",
-    "Conservative and Unionist",
-    "Labour Party",
+    "Green",
+    "Conservative",
+    "Labour",
+    "Labour and Co-operative",
     "Liberal Democrats",
-    "Independent / Other",
+    "Independent",
     "West Suffolk Independents"
   ),
   hex = c(
     "#6DC23B",
     "#00AEEF",
+    "#E4003B",
     "#E4003B",
     "#FAA01A",
     "#B1B4B6",
@@ -94,9 +84,7 @@ ced <- left_join(ced, colours, by = c("party_name" = "party_name"))
 
 test <- lapply(unique(ced$Name), function(district) {
   counts <- ced |> 
-    dplyr::filter(Name == district) |> 
-    select(-councillor_lower)
-  
+    dplyr::filter(Name == district)  
     counts$count <- 1
   
   if(nrow(counts) > 1 ) {
