@@ -56,6 +56,9 @@ ced$Name <- gsub("St\\.", "St", ced$Name)
 
 ced <- left_join(ced, councillors, by = c("Name" = "division"))
 
+# If name is NA, change to Vacancy
+ced$name[is.na(ced$name)] <- "Vacancy"
+
 ced <- ced |> 
   select(Name, councillor_name = name, party_name = party, html, image)
 
